@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题库 | JiananYuan</title>
+</head>
+<body>
+
+<a href="https://leetcode.cn/problems/minimum-operations-to-reduce-an-integer-to-0/">LeetCode 2571</a></li>
+<pre>
+@cache
+def dfs(x: int) -> int:
+    # 判断是否为2的幂次方
+    if (x & (x - 1)) == 0:
+        return 1
+    # 求最低位1所在的位置
+    bp = x & (-x)
+    return 1 + min(dfs(x - bp), dfs(x + bp))
+
+
+class Solution:
+    def minOperations(self, n: int) -> int:
+        return dfs(n)
+</pre>
+    
+<a href="https://leetcode.cn/problems/find-the-maximum-number-of-marked-indices/">LeetCode 2576</a></li>
+<pre>
+class Solution:
+    def maxNumOfMarkedIndices(self, nums: List[int]) -> int:
+        nums.sort()
+        i = 0
+        for x in nums[(len(nums) + 1) // 2:]:
+            if nums[i] * 2 <= x:
+                i += 1
+        return i * 2
+</pre>
+
+<a href="https://leetcode.cn/problems/minimum-time-to-visit-a-cell-in-a-grid/">LeetCode 2577</a></li>
+<pre>
+class Solution {
+    static constexpr int dirs[4][2] = {
+        {-1, 0},
+        {1, 0},
+        {0, -1},
+        {0, 1}
+    };
+public:
+    int minimumTime(vector<vector<int>>& grid) {
+        int m = grid.size(), n = grid[0].size();
+        if (grid[0][1] > 1 && grid[1][0] > 1) {
+            return -1;
+        }
+        int vis[m][n];
+        memset(vis, -1, sizeof(vis));
+        auto check = [&](int end_time) -> bool {
+            vis[m - 1][n - 1] = end_time;
+            vector<pair<int, int> > q = {{m - 1, n - 1}};
+            for (int t = end_time - 1; !q.empty(); --t) {
+                vector<pair<int, int> > nxt;
+                for (auto &[i, j] : q) {
+                    for (auto &d : dirs) {
+                        int x = i + d[0];
+                        int y = j + d[1];
+                        if (x >= 0 && x < m && y >= 0 && y < n && vis[x][y] != end_time && grid[x][y] <= t) {
+                            if (x == 0 && y == 0) {
+                                return true;
+                            }
+                            vis[x][y] = end_time;
+                            nxt.emplace_back(x, y);
+                        }
+                    }
+                }
+                q = move(nxt);
+            }
+            return false;
+        };
+
+        int left = max(grid.back().back(), m + n - 2) - 1, right = 1e5 + m + n;
+        while (left + 1 < right) {
+            int mid = left + (right- left) / 2;
+            (check(mid) ? right : left) = mid;
+        }
+        return right + (right + m + n) % 2;
+    }
+};
+</pre>
+
+<a href="https://leetcode.cn/problems/kth-largest-sum-in-a-binary-tree/">LeetCode 2583</a></li>
+<pre>
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    long long kthLargestLevelSum(TreeNode* root, int k) {
+        queue<pair<TreeNode*, int> > q; // node*, level_number
+        map<int, long long> level_sum;
+        q.push({root, 1});
+        while (!q.empty()) {
+            auto pnode = q.front();
+            q.pop();
+            TreeNode* node = pnode.first;
+            int height = pnode.second;
+            level_sum[height] += node -> val;
+            if (node -> left) {
+                q.push({node -> left, height + 1});
+            }
+            if (node -> right) {
+                q.push({node -> right, height + 1});
+            }
+        }
+        vector<long long> ans;
+        for (auto it = level_sum.begin(); it != level_sum.end(); it++) {
+            ans.push_back(it -> second);
+            // cout << it -> first << " " << it -> second << endl;
+        }
+        sort(ans.begin(), ans.end(), greater<long long>());
+        if (ans.size() < k) {
+            return -1;
+        }
+        return ans[k - 1];
+    }
+};
+</pre>
+
+<a href="https://leetcode.cn/problems/number-of-ways-to-earn-points/">LeetCode 2585</a></li>
+<pre>
+class Solution {
+public:
+    int waysToReachTarget(int target, vector<vector<int>>& types) {
+        int n = types.size();
+        const int MOD = 1e9 + 7;
+        long long f[target + 1];
+        memset(f, 0, sizeof(f));
+        f[0] = 1;
+        for (auto &vec : types) 
+            for (int i = target; i >= 0; i--) 
+                for (int j = 1; j <= vec[0]; j++)
+                    if (i >= j * vec[1]) f[i] = (f[i] + f[i - j * vec[1]]) % MOD;
+        return f[target];
+    }
+};
+</pre>
+
+<a href="https://leetcode.cn/problems/split-the-array-to-make-coprime-products/">LeetCode 2584</a></li>
+<pre>
+class Solution {
+public:
+    int findValidSplit(vector<int>& nums) {
+        int mx = 0;
+        for (int x : nums) mx = max(mx, x);
+        int lim = sqrt(mx) + 3;
+
+        // 筛法求质数
+        bool flag[lim + 1];
+        memset(flag, 0, sizeof(flag));
+        vector<int> prime;
+        for (int i = 2; i * i <= lim; i++) if (!flag[i]) for (int j = i * 2; j <= lim; j += i) flag[j] = true;
+        for (int i = 2; i <= lim; i++) if (!flag[i]) prime.push_back(i);
+
+        int n = nums.size();
+        // cnt[p] 表示质数 p 一共出现了几次
+        unordered_map<int, int> cnt;
+        // vec[i] 表示第 i 个数里有哪些质数
+        vector<int> vec[n];
+        // 质因数分解
+        for (int i = 0; i < n; i++) {
+            int x = nums[i];
+            for (int p : prime) {
+                if (p > x) break;
+                if (x % p) continue;
+                cnt[p]++; vec[i].push_back(p);
+                while (x % p == 0) x /= p;
+            }
+            if (x > 1) cnt[x]++, vec[i].push_back(x);
+        }
+
+        // good 表示有几个质数 p 满足“分割点左边要么不包含 p，要么包含所有 p”
+        //
+        // 假设分割点一开始是 -1，那么分割点左边就是空的，肯定所有 p 都满足条件，
+        // 因此 good 初始值就是 cnt.size()，即质数的总数
+        int good = cnt.size();
+        // have[p] 表示分割点左边有几个质数 p
+        unordered_map<int, int> have;
+        for (int i = 0; i < n - 1; i++) {
+            // 分割点前进到了 i，把第 i 个数里所有的质数都加入分割点左边
+            for (int p : vec[i]) {
+                have[p]++;
+                // have[p] 从 0 到 1，不满足“分割点左边不包含 p”
+                if (have[p] == 1) good--;
+                // have[p] 从 cnt[p] - 1 到 cnt[p]，满足“包含所有 p”
+                // 注意这里是 if 而不是 else if，这是为了处理 cnt[p] == 1 的情况
+                if (have[p] == cnt[p]) good++;
+            }
+            // 所有质数都满足条件，返回答案
+            if (good == cnt.size()) return i;
+        }
+        // 没有满足条件的分割点
+        return -1;
+    }
+};
+</pre>
+  
+<a href="https://leetcode.cn/contest/weekly-contest-336/problems/count-the-number-of-beautiful-subarrays/">LeetCode 2588</a></li>
+<pre>
+func beautifulSubarrays(nums []int) (ans int64) {
+    s := make([]int, len(nums)+1)
+    for i,x := range nums {
+        s[i+1] = s[i] ^ x
+    }
+    cnt := map[int]int{}
+    for _, x := range s {
+        ans += int64(cnt[x])
+        cnt[x]++;
+    }
+    return
+}
+</pre>
+
+<a href="https://leetcode.cn/problems/minimum-time-to-complete-all-tasks/">LeetCode 2589</a></li>
+<pre>
+class Solution {
+    bool run[2001];
+public:
+    int findMinimumTime(vector<vector<int>>& tasks) {
+        sort(tasks.begin(), tasks.end(), [](auto &a, auto &b) {
+            return a[1] < b[1];
+        });
+        int ans = 0;
+        for (auto& t : tasks) {
+            int start = t[0], end = t[1], d = t[2];
+            for (int i = start; i <= end; i += 1) {
+                d -= run[i];
+            }
+            for (int i = end; d > 0; i -= 1) {
+                if (!run[i]) {
+                    run[i] = true;
+                    d -= 1;
+                    ans += 1;
+                }
+            }
+        }
+        return ans;
+    }
+};
+</pre>
+
+</body>
+</html>
